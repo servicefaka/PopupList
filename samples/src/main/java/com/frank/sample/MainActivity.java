@@ -39,6 +39,11 @@ public class MainActivity extends AppCompatActivity {
         PopupList popupList = new PopupList();
         popupList.init(this, lv_main, popupMenuItemList, new PopupList.OnPopupListClickListener() {
             @Override
+            public boolean showPopupList(View contextView, View view, int position, long id) {
+                return position != 0;
+            }
+
+            @Override
             public void onPopupListClick(View contextView, int contextPosition, int position) {
                 Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_LONG).show();
             }

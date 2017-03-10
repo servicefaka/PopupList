@@ -31,6 +31,7 @@ import java.util.List;
 
 /**
  * This utility class can add a horizontal popup-menu easily
+ * <p>
  * 该工具类可以很方便的为View、ListView/GridView绑定长按弹出横向气泡菜单
  */
 public class PopupList {
@@ -55,7 +56,7 @@ public class PopupList {
     private View mContextView;
     private View mIndicatorView;
     private List<String> mPopupItemList;
-    private OnPopupListClickListener mOnPopupListClickListener;
+    private PopupListListener mPopupListListener;
     private int mContextPosition;
     private float mRawX;
     private float mRawY;
@@ -84,15 +85,15 @@ public class PopupList {
     private int mDividerHeight;
 
     /**
-     * {@link PopupList#init(Context, View, List, OnPopupListClickListener)} method make PopList restored
+     * {@link PopupList#init(Context, View, List, PopupListListener)} method make PopList restored
      * to the default style and rebind event. so other set() method should be invoked after that method.
      *
-     * @param context                  the activity
-     * @param anchorView               the view on which to pin the popup window
-     * @param popupItemList            the list of the popup menu
-     * @param onPopupListClickListener the Listener
+     * @param context           the activity
+     * @param anchorView        the view on which to pin the popup window
+     * @param popupItemList     the list of the popup menu
+     * @param popupListListener the Listener
      */
-    public void init(Context context, View anchorView, List<String> popupItemList, OnPopupListClickListener onPopupListClickListener) {
+    public void init(Context context, View anchorView, List<String> popupItemList, PopupListListener popupListListener) {
         this.mNormalTextColor = DEFAULT_NORMAL_TEXT_COLOR;
         this.mPressedTextColor = DEFAULT_PRESSED_TEXT_COLOR;
         this.mTextSize = sp2px(DEFAULT_TEXT_SIZE_SP);
@@ -109,7 +110,7 @@ public class PopupList {
         this.mContext = context;
         this.mAnchorView = anchorView;
         this.mPopupItemList = popupItemList;
-        this.mOnPopupListClickListener = onPopupListClickListener;
+        this.mPopupListListener = popupListListener;
         this.mPopupWindow = null;
         mAnchorView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -123,6 +124,10 @@ public class PopupList {
             ((AbsListView) mAnchorView).setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                 @Override
                 public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                    if (mPopupListListener != null
+                            && !mPopupListListener.showPopupList(parent, view, position, id)) {
+                        return false;
+                    }
                     mContextView = view;
                     mContextPosition = position;
                     showPopupListWindow();
@@ -133,6 +138,10 @@ public class PopupList {
             mAnchorView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
+                    if (mPopupListListener != null
+                            && !mPopupListListener.showPopupList(v, v, 0, 0)) {
+                        return false;
+                    }
                     mContextView = v;
                     mContextPosition = 0;
                     showPopupListWindow();
@@ -184,8 +193,8 @@ public class PopupList {
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (mOnPopupListClickListener != null) {
-                            mOnPopupListClickListener.onPopupListClick(mContextView, mContextPosition, finalI);
+                        if (mPopupListListener != null) {
+                            mPopupListListener.onPopupListClick(mContextView, mContextPosition, finalI);
                             hidePopupListWindow();
                         }
                     }
@@ -238,7 +247,7 @@ public class PopupList {
             float marginLeftScreenEdge = mRawX;
             float marginRightScreenEdge = mScreenWidth - mRawX;
             if (marginLeftScreenEdge < mPopupWindowWidth / 2f) {
-                // in case of the draw of indicator out of Screen's bounds
+                // in case of the draw of indicator out of corner's bounds
                 if (marginLeftScreenEdge < mIndicatorWidth / 2f + mBackgroundCornerRadius) {
                     mIndicatorView.setTranslationX(mIndicatorWidth / 2f + mBackgroundCornerRadius - mPopupWindowWidth / 2f);
                 } else {
@@ -254,9 +263,11 @@ public class PopupList {
                 mIndicatorView.setTranslationX(0);
             }
         }
-        mPopupWindow.showAtLocation(mAnchorView, Gravity.CENTER,
-                (int) mRawX - mScreenWidth / 2,
-                (int) mRawY - mScreenHeight / 2 - mPopupWindowHeight + mIndicatorHeight);
+        if (!mPopupWindow.isShowing()) {
+            mPopupWindow.showAtLocation(mAnchorView, Gravity.CENTER,
+                    (int) mRawX - mScreenWidth / 2,
+                    (int) mRawY - mScreenHeight / 2 - mPopupWindowHeight + mIndicatorHeight);
+        }
     }
 
     private void refreshBackgroundOrRadiusStateList() {
@@ -574,8 +585,35 @@ public class PopupList {
                 value, getResources().getDisplayMetrics());
     }
 
-    public interface OnPopupListClickListener {
+    public interface PopupListListener {
+
+        /**
+         * Whether the PopupList should be bound to the special view
+         *
+         * @param contextView The context view(The AbsListView where the click happened or normal view).
+         * @param view        The view within the AbsListView that was clicked or normal view
+         * @param position    The position of the view in the list
+         * @param id          The row id of the item that was clicked
+         * @return true if the view should bind the PopupList, false otherwise
+         */
+        boolean showPopupList(View contextView, View view, int position, long id);
+
+        /**
+         * The callback to be invoked with an item in this PopupList has
+         * been clicked
+         *
+         * @param contextView     The context view(The AbsListView where the click happened or normal view).
+         * @param contextPosition The position of the view in the list
+         * @param position        The position of the view in the PopupList
+         */
         void onPopupListClick(View contextView, int contextPosition, int position);
+    }
+
+    public static abstract class OnPopupListClickListener implements PopupListListener {
+        @Override
+        public boolean showPopupList(View contextView, View view, int position, long id) {
+            return true;
+        }
     }
 
 }
