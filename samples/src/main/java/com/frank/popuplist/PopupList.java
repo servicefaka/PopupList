@@ -19,6 +19,8 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -53,6 +55,7 @@ public class PopupList {
     private Context mContext;
     private PopupWindow mPopupWindow;
     private View mAnchorView;
+    private View mAdapterView;
     private View mContextView;
     private View mIndicatorView;
     private List<String> mPopupItemList;
@@ -125,9 +128,10 @@ public class PopupList {
                 @Override
                 public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                     if (mPopupListListener != null
-                            && !mPopupListListener.showPopupList(parent, view, position, id)) {
+                            && !mPopupListListener.showPopupList(parent, view, position)) {
                         return false;
                     }
+                    mAdapterView = parent;
                     mContextView = view;
                     mContextPosition = position;
                     showPopupListWindow();
@@ -139,7 +143,7 @@ public class PopupList {
                 @Override
                 public boolean onLongClick(View v) {
                     if (mPopupListListener != null
-                            && !mPopupListListener.showPopupList(v, v, 0, 0)) {
+                            && !mPopupListListener.showPopupList(v, v, 0)) {
                         return false;
                     }
                     mContextView = v;
@@ -163,7 +167,7 @@ public class PopupList {
         if (mContext instanceof Activity && ((Activity) mContext).isFinishing()) {
             return;
         }
-        if (mPopupWindow == null) {
+        if (mPopupWindow == null || mPopupListListener instanceof AdapterPopupListListener) {
             LinearLayout contentView = new LinearLayout(mContext);
             contentView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             contentView.setOrientation(LinearLayout.VERTICAL);
@@ -181,6 +185,10 @@ public class PopupList {
                 }
                 layoutParams.gravity = Gravity.CENTER;
                 mIndicatorView.setLayoutParams(layoutParams);
+                ViewParent viewParent = mIndicatorView.getParent();
+                if (viewParent instanceof ViewGroup) {
+                    ((ViewGroup) viewParent).removeView(mIndicatorView);
+                }
                 contentView.addView(mIndicatorView);
             }
             for (int i = 0; i < mPopupItemList.size(); i++) {
@@ -199,7 +207,12 @@ public class PopupList {
                         }
                     }
                 });
-                textView.setText(mPopupItemList.get(i));
+                if (mPopupListListener instanceof AdapterPopupListListener) {
+                    AdapterPopupListListener adapterPopupListListener = (AdapterPopupListListener) mPopupListListener;
+                    textView.setText(adapterPopupListListener.formatText(mAdapterView, mContextView, mContextPosition, i, mPopupItemList.get(i)));
+                } else {
+                    textView.setText(mPopupItemList.get(i));
+                }
                 if (mPopupItemList.size() > 1 && i == 0) {
                     textView.setBackgroundDrawable(mLeftItemBackground);
                 } else if (mPopupItemList.size() > 1 && i == mPopupItemList.size() - 1) {
@@ -590,13 +603,12 @@ public class PopupList {
         /**
          * Whether the PopupList should be bound to the special view
          *
-         * @param contextView The context view(The AbsListView where the click happened or normal view).
-         * @param view        The view within the AbsListView that was clicked or normal view
-         * @param position    The position of the view in the list
-         * @param id          The row id of the item that was clicked
+         * @param adapterView     The context view(The AbsListView where the click happened or normal view).
+         * @param contextView     The view within the AbsListView that was clicked or normal view
+         * @param contextPosition The position of the view in the list
          * @return true if the view should bind the PopupList, false otherwise
          */
-        boolean showPopupList(View contextView, View view, int position, long id);
+        boolean showPopupList(View adapterView, View contextView, int contextPosition);
 
         /**
          * The callback to be invoked with an item in this PopupList has
@@ -609,11 +621,8 @@ public class PopupList {
         void onPopupListClick(View contextView, int contextPosition, int position);
     }
 
-    public static abstract class OnPopupListClickListener implements PopupListListener {
-        @Override
-        public boolean showPopupList(View contextView, View view, int position, long id) {
-            return true;
-        }
+    public interface AdapterPopupListListener extends PopupListListener {
+        String formatText(View adapterView, View contextView, int contextPosition, int position, String text);
     }
 
 }

@@ -37,15 +37,15 @@ public class MainActivity extends AppCompatActivity {
         popupMenuItemList.add(getString(R.string.share));
         popupMenuItemList.add(getString(R.string.more));
         PopupList popupList = new PopupList();
-        popupList.init(this, lv_main, popupMenuItemList, new PopupList.OnPopupListClickListener() {
+        popupList.init(this, lv_main, popupMenuItemList, new PopupList.PopupListListener() {
             @Override
-            public boolean showPopupList(View contextView, View view, int position, long id) {
-                return position != 0;
+            public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
+                return true;
             }
 
             @Override
             public void onPopupListClick(View contextView, int contextPosition, int position) {
-                Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
             }
         });
         popupList.setTextSize(popupList.sp2px(12));
@@ -53,10 +53,15 @@ public class MainActivity extends AppCompatActivity {
         popupList.setIndicatorView(popupList.getDefaultIndicatorView(popupList.dp2px(16), popupList.dp2px(8), 0xFF444444));
 
         PopupList normalViewPopupList = new PopupList();
-        normalViewPopupList.init(this, btn_long_click, popupMenuItemList, new PopupList.OnPopupListClickListener() {
+        normalViewPopupList.init(this, btn_long_click, popupMenuItemList, new PopupList.PopupListListener() {
+            @Override
+            public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
+                return true;
+            }
+
             @Override
             public void onPopupListClick(View contextView, int contextPosition, int position) {
-                Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
             }
         });
         normalViewPopupList.setTextSize(normalViewPopupList.sp2px(12));
