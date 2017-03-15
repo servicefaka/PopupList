@@ -8,10 +8,10 @@
 **<p>Welcome star, fork</p>**
 **<p>欢迎右上角star，fork</p>**
 
-##效果图(Screenshot)
+## 效果图(Screenshot)
 ![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_1.png)![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_2.png)<br />
 ![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_3.png)![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_4.png)
-##使用方式(How do I use PopupList?)
+## 使用方式(How do I use PopupList?)
 Just need a `.java`file and a little code.<br />
 只需要一个Java文件和几行代码即可。
 
@@ -20,7 +20,7 @@ Just need a `.java`file and a little code.<br />
     popupList.init(context, view, popupMenuItemList, OnPopupListClickListener);
 ```
 
-##例子(Sample)：
+## 例子(Sample)：
 ```java
     PopupList popupList = new PopupList();
     popupList.init(this, lv_main, popupMenuItemList, new PopupList.PopupListListener() {
@@ -35,6 +35,6 @@ Just need a `.java`file and a little code.<br />
     });
     popupList.setIndicatorView(popupList.getDefaultIndicatorView());
 ```
-##配置(Configuration)：
+## 配置(Configuration)：
 You can get more information from the [Wiki](https://github.com/shangmingchao/PopupList/wiki/Configuration) page.<br />
 可以在[Wiki](https://github.com/shangmingchao/PopupList/wiki/%E8%AF%A6%E7%BB%86%E9%85%8D%E7%BD%AE)页了解更多
