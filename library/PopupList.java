@@ -19,6 +19,8 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -36,23 +38,24 @@ import java.util.List;
  */
 public class PopupList {
 
-    private static final int DEFAULT_NORMAL_TEXT_COLOR = Color.WHITE;
-    private static final int DEFAULT_PRESSED_TEXT_COLOR = Color.WHITE;
-    private static final float DEFAULT_TEXT_SIZE_SP = 12;
-    private static final int DEFAULT_TEXT_PADDING_LEFT_DP = 10;
-    private static final int DEFAULT_TEXT_PADDING_TOP_DP = 8;
-    private static final int DEFAULT_TEXT_PADDING_RIGHT_DP = 10;
-    private static final int DEFAULT_TEXT_PADDING_BOTTOM_DP = 8;
-    private static final int DEFAULT_NORMAL_BACKGROUND_COLOR = 0xFF444444;
-    private static final int DEFAULT_PRESSED_BACKGROUND_COLOR = 0xFF777777;
-    private static final int DEFAULT_BACKGROUND_RADIUS_DP = 8;
-    private static final int DEFAULT_DIVIDER_COLOR = 0xFF888888;
-    private static final int DEFAULT_DIVIDER_WIDTH_PIXEL = 1;
-    private static final int DEFAULT_DIVIDER_HEIGHT_PIXEL = 30;
+    public static final int DEFAULT_NORMAL_TEXT_COLOR = Color.WHITE;
+    public static final int DEFAULT_PRESSED_TEXT_COLOR = Color.WHITE;
+    public static final float DEFAULT_TEXT_SIZE_DP = 14;
+    public static final float DEFAULT_TEXT_PADDING_LEFT_DP = 10.0f;
+    public static final float DEFAULT_TEXT_PADDING_TOP_DP = 5.0f;
+    public static final float DEFAULT_TEXT_PADDING_RIGHT_DP = 10.0f;
+    public static final float DEFAULT_TEXT_PADDING_BOTTOM_DP = 5.0f;
+    public static final int DEFAULT_NORMAL_BACKGROUND_COLOR = 0xCC000000;
+    public static final int DEFAULT_PRESSED_BACKGROUND_COLOR = 0xE7777777;
+    public static final int DEFAULT_BACKGROUND_RADIUS_DP = 8;
+    public static final int DEFAULT_DIVIDER_COLOR = 0x9AFFFFFF;
+    public static final float DEFAULT_DIVIDER_WIDTH_DP = 0.5f;
+    public static final float DEFAULT_DIVIDER_HEIGHT_DP = 16.0f;
 
     private Context mContext;
     private PopupWindow mPopupWindow;
     private View mAnchorView;
+    private View mAdapterView;
     private View mContextView;
     private View mIndicatorView;
     private List<String> mPopupItemList;
@@ -64,6 +67,7 @@ public class PopupList {
     private StateListDrawable mRightItemBackground;
     private StateListDrawable mCornerItemBackground;
     private ColorStateList mTextColorStateList;
+    private GradientDrawable mCornerBackground;
     private int mIndicatorWidth;
     private int mIndicatorHeight;
     private int mPopupWindowWidth;
@@ -96,7 +100,7 @@ public class PopupList {
     public void init(Context context, View anchorView, List<String> popupItemList, PopupListListener popupListListener) {
         this.mNormalTextColor = DEFAULT_NORMAL_TEXT_COLOR;
         this.mPressedTextColor = DEFAULT_PRESSED_TEXT_COLOR;
-        this.mTextSize = sp2px(DEFAULT_TEXT_SIZE_SP);
+        this.mTextSize = dp2px(DEFAULT_TEXT_SIZE_DP);
         this.mTextPaddingLeft = dp2px(DEFAULT_TEXT_PADDING_LEFT_DP);
         this.mTextPaddingTop = dp2px(DEFAULT_TEXT_PADDING_TOP_DP);
         this.mTextPaddingRight = dp2px(DEFAULT_TEXT_PADDING_RIGHT_DP);
@@ -105,8 +109,8 @@ public class PopupList {
         this.mPressedBackgroundColor = DEFAULT_PRESSED_BACKGROUND_COLOR;
         this.mBackgroundCornerRadius = dp2px(DEFAULT_BACKGROUND_RADIUS_DP);
         this.mDividerColor = DEFAULT_DIVIDER_COLOR;
-        this.mDividerWidth = DEFAULT_DIVIDER_WIDTH_PIXEL;
-        this.mDividerHeight = DEFAULT_DIVIDER_HEIGHT_PIXEL;
+        this.mDividerWidth = dp2px(DEFAULT_DIVIDER_WIDTH_DP);
+        this.mDividerHeight = dp2px(DEFAULT_DIVIDER_HEIGHT_DP);
         this.mContext = context;
         this.mAnchorView = anchorView;
         this.mPopupItemList = popupItemList;
@@ -125,9 +129,10 @@ public class PopupList {
                 @Override
                 public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                     if (mPopupListListener != null
-                            && !mPopupListListener.showPopupList(parent, view, position, id)) {
+                            && !mPopupListListener.showPopupList(parent, view, position)) {
                         return false;
                     }
+                    mAdapterView = parent;
                     mContextView = view;
                     mContextPosition = position;
                     showPopupListWindow();
@@ -139,7 +144,7 @@ public class PopupList {
                 @Override
                 public boolean onLongClick(View v) {
                     if (mPopupListListener != null
-                            && !mPopupListListener.showPopupList(v, v, 0, 0)) {
+                            && !mPopupListListener.showPopupList(v, v, 0)) {
                         return false;
                     }
                     mContextView = v;
@@ -163,14 +168,14 @@ public class PopupList {
         if (mContext instanceof Activity && ((Activity) mContext).isFinishing()) {
             return;
         }
-        if (mPopupWindow == null) {
+        if (mPopupWindow == null || mPopupListListener instanceof AdapterPopupListListener) {
             LinearLayout contentView = new LinearLayout(mContext);
             contentView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             contentView.setOrientation(LinearLayout.VERTICAL);
             LinearLayout popupListContainer = new LinearLayout(mContext);
             popupListContainer.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             popupListContainer.setOrientation(LinearLayout.HORIZONTAL);
-            popupListContainer.setBackgroundDrawable(mCornerItemBackground);
+            popupListContainer.setBackgroundDrawable(mCornerBackground);
             contentView.addView(popupListContainer);
             if (mIndicatorView != null) {
                 LinearLayout.LayoutParams layoutParams;
@@ -181,6 +186,10 @@ public class PopupList {
                 }
                 layoutParams.gravity = Gravity.CENTER;
                 mIndicatorView.setLayoutParams(layoutParams);
+                ViewParent viewParent = mIndicatorView.getParent();
+                if (viewParent instanceof ViewGroup) {
+                    ((ViewGroup) viewParent).removeView(mIndicatorView);
+                }
                 contentView.addView(mIndicatorView);
             }
             for (int i = 0; i < mPopupItemList.size(); i++) {
@@ -199,7 +208,12 @@ public class PopupList {
                         }
                     }
                 });
-                textView.setText(mPopupItemList.get(i));
+                if (mPopupListListener instanceof AdapterPopupListListener) {
+                    AdapterPopupListListener adapterPopupListListener = (AdapterPopupListListener) mPopupListListener;
+                    textView.setText(adapterPopupListListener.formatText(mAdapterView, mContextView, mContextPosition, i, mPopupItemList.get(i)));
+                } else {
+                    textView.setText(mPopupItemList.get(i));
+                }
                 if (mPopupItemList.size() > 1 && i == 0) {
                     textView.setBackgroundDrawable(mLeftItemBackground);
                 } else if (mPopupItemList.size() > 1 && i == mPopupItemList.size() - 1) {
@@ -280,7 +294,7 @@ public class PopupList {
                 0, 0,
                 mBackgroundCornerRadius, mBackgroundCornerRadius});
         GradientDrawable leftItemNormalDrawable = new GradientDrawable();
-        leftItemNormalDrawable.setColor(mNormalBackgroundColor);
+        leftItemNormalDrawable.setColor(Color.TRANSPARENT);
         leftItemNormalDrawable.setCornerRadii(new float[]{
                 mBackgroundCornerRadius, mBackgroundCornerRadius,
                 0, 0,
@@ -298,7 +312,7 @@ public class PopupList {
                 mBackgroundCornerRadius, mBackgroundCornerRadius,
                 0, 0});
         GradientDrawable rightItemNormalDrawable = new GradientDrawable();
-        rightItemNormalDrawable.setColor(mNormalBackgroundColor);
+        rightItemNormalDrawable.setColor(Color.TRANSPARENT);
         rightItemNormalDrawable.setCornerRadii(new float[]{
                 0, 0,
                 mBackgroundCornerRadius, mBackgroundCornerRadius,
@@ -310,21 +324,16 @@ public class PopupList {
         // corner
         GradientDrawable cornerItemPressedDrawable = new GradientDrawable();
         cornerItemPressedDrawable.setColor(mPressedBackgroundColor);
-        cornerItemPressedDrawable.setCornerRadii(new float[]{
-                mBackgroundCornerRadius, mBackgroundCornerRadius,
-                mBackgroundCornerRadius, mBackgroundCornerRadius,
-                mBackgroundCornerRadius, mBackgroundCornerRadius,
-                mBackgroundCornerRadius, mBackgroundCornerRadius});
+        cornerItemPressedDrawable.setCornerRadius(mBackgroundCornerRadius);
         GradientDrawable cornerItemNormalDrawable = new GradientDrawable();
-        cornerItemNormalDrawable.setColor(mNormalBackgroundColor);
-        cornerItemNormalDrawable.setCornerRadii(new float[]{
-                mBackgroundCornerRadius, mBackgroundCornerRadius,
-                mBackgroundCornerRadius, mBackgroundCornerRadius,
-                mBackgroundCornerRadius, mBackgroundCornerRadius,
-                mBackgroundCornerRadius, mBackgroundCornerRadius});
+        cornerItemNormalDrawable.setColor(Color.TRANSPARENT);
+        cornerItemNormalDrawable.setCornerRadius(mBackgroundCornerRadius);
         mCornerItemBackground = new StateListDrawable();
         mCornerItemBackground.addState(new int[]{android.R.attr.state_pressed}, cornerItemPressedDrawable);
         mCornerItemBackground.addState(new int[]{}, cornerItemNormalDrawable);
+        mCornerBackground = new GradientDrawable();
+        mCornerBackground.setColor(mNormalBackgroundColor);
+        mCornerBackground.setCornerRadius(mBackgroundCornerRadius);
     }
 
     private StateListDrawable getCenterItemBackground() {
@@ -332,7 +341,7 @@ public class PopupList {
         GradientDrawable centerItemPressedDrawable = new GradientDrawable();
         centerItemPressedDrawable.setColor(mPressedBackgroundColor);
         GradientDrawable centerItemNormalDrawable = new GradientDrawable();
-        centerItemNormalDrawable.setColor(mNormalBackgroundColor);
+        centerItemNormalDrawable.setColor(Color.TRANSPARENT);
         centerItemBackground.addState(new int[]{android.R.attr.state_pressed}, centerItemPressedDrawable);
         centerItemBackground.addState(new int[]{}, centerItemNormalDrawable);
         return centerItemBackground;
@@ -359,8 +368,12 @@ public class PopupList {
         return mIndicatorView;
     }
 
-    public View getDefaultIndicatorView(final float widthPixel, final float heightPixel,
-                                        final int color) {
+    public View getDefaultIndicatorView() {
+        return getTriangleIndicatorView(dp2px(17), dp2px(9), DEFAULT_NORMAL_BACKGROUND_COLOR);
+    }
+
+    public View getTriangleIndicatorView(final float widthPixel, final float heightPixel,
+                                         final int color) {
         ImageView indicator = new ImageView(mContext);
         Drawable drawable = new Drawable() {
             @Override
@@ -590,13 +603,12 @@ public class PopupList {
         /**
          * Whether the PopupList should be bound to the special view
          *
-         * @param contextView The context view(The AbsListView where the click happened or normal view).
-         * @param view        The view within the AbsListView that was clicked or normal view
-         * @param position    The position of the view in the list
-         * @param id          The row id of the item that was clicked
+         * @param adapterView     The context view(The AbsListView where the click happened or normal view).
+         * @param contextView     The view within the AbsListView that was clicked or normal view
+         * @param contextPosition The position of the view in the list
          * @return true if the view should bind the PopupList, false otherwise
          */
-        boolean showPopupList(View contextView, View view, int position, long id);
+        boolean showPopupList(View adapterView, View contextView, int contextPosition);
 
         /**
          * The callback to be invoked with an item in this PopupList has
@@ -609,11 +621,18 @@ public class PopupList {
         void onPopupListClick(View contextView, int contextPosition, int position);
     }
 
-    public static abstract class OnPopupListClickListener implements PopupListListener {
-        @Override
-        public boolean showPopupList(View contextView, View view, int position, long id) {
-            return true;
-        }
+    public interface AdapterPopupListListener extends PopupListListener {
+        /**
+         * Format the PopupList's text
+         *
+         * @param adapterView     The AbsListView
+         * @param contextView     The context view
+         * @param contextPosition The position of the view in the list
+         * @param position        The position of the view in the PopupList
+         * @param text            The PopupList's text
+         * @return The formatted text
+         */
+        String formatText(View adapterView, View contextView, int contextPosition, int position, String text);
     }
 
 }

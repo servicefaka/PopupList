@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         btn_long_click = (Button) findViewById(R.id.btn_long_click);
         lv_main = (ListView) findViewById(R.id.lv_main);
-        mDataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, mDataList);
+        mDataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_expandable_list_item_1, mDataList);
         lv_main.setAdapter(mDataAdapter);
 
         popupMenuItemList.add(getString(R.string.copy));
@@ -48,9 +48,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
             }
         });
-        popupList.setTextSize(popupList.sp2px(12));
-        popupList.setTextPadding(popupList.dp2px(10), popupList.dp2px(5), popupList.dp2px(10), popupList.dp2px(5));
-        popupList.setIndicatorView(popupList.getDefaultIndicatorView(popupList.dp2px(16), popupList.dp2px(8), 0xFF444444));
+        popupList.setIndicatorView(popupList.getDefaultIndicatorView());
 
         PopupList normalViewPopupList = new PopupList();
         normalViewPopupList.init(this, btn_long_click, popupMenuItemList, new PopupList.PopupListListener() {
@@ -64,9 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
             }
         });
-        normalViewPopupList.setTextSize(normalViewPopupList.sp2px(12));
-        normalViewPopupList.setTextPadding(normalViewPopupList.dp2px(10), normalViewPopupList.dp2px(5), normalViewPopupList.dp2px(10), normalViewPopupList.dp2px(5));
-        normalViewPopupList.setIndicatorView(normalViewPopupList.getDefaultIndicatorView(normalViewPopupList.dp2px(16), normalViewPopupList.dp2px(8), 0xFF444444));
+        normalViewPopupList.setIndicatorView(normalViewPopupList.getDefaultIndicatorView());
 
         lv_main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
