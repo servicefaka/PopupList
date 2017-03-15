@@ -23,15 +23,17 @@ Just need a `.java`file and a little code.<br />
 ##例子(Sample)：
 ```java
     PopupList popupList = new PopupList();
-    popupList.init(this, lv_main, popupMenuItemList, new PopupList.OnPopupListClickListener() {
+    popupList.init(this, lv_main, popupMenuItemList, new PopupList.PopupListListener() {
+        @Override
+        public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
+            return true;
+        }
         @Override
         public void onPopupListClick(View contextView, int contextPosition, int position) {
-            Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
         }
     });
-    popupList.setTextSize(popupList.sp2px(12));
-    popupList.setTextPadding(popupList.dp2px(10), popupList.dp2px(5), popupList.dp2px(10), popupList.dp2px(5));
-    popupList.setIndicatorView(popupList.getDefaultIndicatorView(popupList.dp2px(16), popupList.dp2px(8), 0xFF444444));
+    popupList.setIndicatorView(popupList.getDefaultIndicatorView());
 ```
 ##配置(Configuration)：
 You can get more information from the [Wiki](https://github.com/shangmingchao/PopupList/wiki/Configuration) page.<br />
