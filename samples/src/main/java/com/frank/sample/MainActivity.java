@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
         popupMenuItemList.add(getString(R.string.delete));
         popupMenuItemList.add(getString(R.string.share));
         popupMenuItemList.add(getString(R.string.more));
-        PopupList popupList = new PopupList();
-        popupList.init(this, lv_main, popupMenuItemList, new PopupList.PopupListListener() {
+        PopupList popupList = new PopupList(this);
+        popupList.bind(lv_main, popupMenuItemList, new PopupList.PopupListListener() {
             @Override
             public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
                 return true;
@@ -49,10 +49,9 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
             }
         });
-        popupList.setIndicatorView(popupList.getDefaultIndicatorView());
 
-        PopupList normalViewPopupList = new PopupList();
-        normalViewPopupList.init(this, btn_long_click, popupMenuItemList, new PopupList.PopupListListener() {
+        PopupList normalViewPopupList = new PopupList(this);
+        normalViewPopupList.bind(btn_long_click, popupMenuItemList, new PopupList.PopupListListener() {
             @Override
             public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
                 return true;
@@ -63,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, contextPosition + "," + position, Toast.LENGTH_SHORT).show();
             }
         });
-        normalViewPopupList.setIndicatorView(normalViewPopupList.getDefaultIndicatorView());
 
         lv_main.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

@@ -55,9 +55,7 @@ public class SecondaryActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 PopupList popupList = new PopupList(view.getContext());
-                popupList.setIndicatorView(popupList.getDefaultIndicatorView());
-                final int fContextPosition = position;
-                popupList.showPopupListWindow(view.getContext(), view, mRawX, mRawY, popupMenuItemList, new PopupList.PopupListListener() {
+                popupList.showPopupListWindow(view, position, mRawX, mRawY, popupMenuItemList, new PopupList.PopupListListener() {
                     @Override
                     public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
                         return true;
@@ -65,7 +63,7 @@ public class SecondaryActivity extends AppCompatActivity {
 
                     @Override
                     public void onPopupListClick(View contextView, int contextPosition, int position) {
-                        Toast.makeText(contextView.getContext(), fContextPosition + "," + position, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(contextView.getContext(), contextPosition + "," + position, Toast.LENGTH_SHORT).show();
                     }
                 });
                 return true;

@@ -88,24 +88,8 @@ public class PopupList {
     private int mDividerWidth;
     private int mDividerHeight;
 
-    public PopupList() {
-
-    }
-
     public PopupList(Context context) {
         this.mContext = context;
-    }
-
-    /**
-     * {@link PopupList#init(Context, View, List, PopupListListener)} method make PopList restored
-     * to the default style and rebind event. so other set() method should be invoked after that method.
-     *
-     * @param context           the activity
-     * @param anchorView        the view on which to pin the popup window
-     * @param popupItemList     the list of the popup menu
-     * @param popupListListener the Listener
-     */
-    public void init(Context context, View anchorView, List<String> popupItemList, PopupListListener popupListListener) {
         this.mNormalTextColor = DEFAULT_NORMAL_TEXT_COLOR;
         this.mPressedTextColor = DEFAULT_PRESSED_TEXT_COLOR;
         this.mTextSize = dp2px(DEFAULT_TEXT_SIZE_DP);
@@ -119,7 +103,31 @@ public class PopupList {
         this.mDividerColor = DEFAULT_DIVIDER_COLOR;
         this.mDividerWidth = dp2px(DEFAULT_DIVIDER_WIDTH_DP);
         this.mDividerHeight = dp2px(DEFAULT_DIVIDER_HEIGHT_DP);
-        this.mContext = context;
+        this.mIndicatorView = getDefaultIndicatorView(mContext);
+        if (mScreenWidth == 0) {
+            mScreenWidth = getScreenWidth();
+        }
+        if (mScreenHeight == 0) {
+            mScreenHeight = getScreenHeight();
+        }
+        refreshBackgroundOrRadiusStateList();
+        refreshTextColorStateList(mPressedTextColor, mNormalTextColor);
+    }
+
+    /**
+     * Popup a window when anchorView is clicked and held.
+     * That method will call {@link View#setOnTouchListener(View.OnTouchListener)} and
+     * {@link View#setOnLongClickListener(View.OnLongClickListener)}(or
+     * {@link AbsListView#setOnItemLongClickListener(AdapterView.OnItemLongClickListener)}
+     * if anchorView is a instance of AbsListView), so you can only use
+     * {@link PopupList#showPopupListWindow(View, int, float, float, List, PopupListListener)}
+     * if you called those method before.
+     *
+     * @param anchorView        the view on which to pin the popup window
+     * @param popupItemList     the list of the popup menu
+     * @param popupListListener the Listener
+     */
+    public void bind(View anchorView, List<String> popupItemList, PopupListListener popupListListener) {
         this.mAnchorView = anchorView;
         this.mPopupItemList = popupItemList;
         this.mPopupListListener = popupListListener;
@@ -162,51 +170,31 @@ public class PopupList {
                 }
             });
         }
-        if (mScreenWidth == 0) {
-            mScreenWidth = getScreenWidth();
-        }
-        if (mScreenHeight == 0) {
-            mScreenHeight = getScreenHeight();
-        }
-        refreshBackgroundOrRadiusStateList();
-        refreshTextColorStateList(mPressedTextColor, mNormalTextColor);
     }
 
-    public void showPopupListWindow(Context context, View anchorView, float rawX, float rawY, List<String> popupItemList, PopupListListener popupListListener) {
-        this.mNormalTextColor = DEFAULT_NORMAL_TEXT_COLOR;
-        this.mPressedTextColor = DEFAULT_PRESSED_TEXT_COLOR;
-        this.mTextSize = dp2px(DEFAULT_TEXT_SIZE_DP);
-        this.mTextPaddingLeft = dp2px(DEFAULT_TEXT_PADDING_LEFT_DP);
-        this.mTextPaddingTop = dp2px(DEFAULT_TEXT_PADDING_TOP_DP);
-        this.mTextPaddingRight = dp2px(DEFAULT_TEXT_PADDING_RIGHT_DP);
-        this.mTextPaddingBottom = dp2px(DEFAULT_TEXT_PADDING_BOTTOM_DP);
-        this.mNormalBackgroundColor = DEFAULT_NORMAL_BACKGROUND_COLOR;
-        this.mPressedBackgroundColor = DEFAULT_PRESSED_BACKGROUND_COLOR;
-        this.mBackgroundCornerRadius = dp2px(DEFAULT_BACKGROUND_RADIUS_DP);
-        this.mDividerColor = DEFAULT_DIVIDER_COLOR;
-        this.mDividerWidth = dp2px(DEFAULT_DIVIDER_WIDTH_DP);
-        this.mDividerHeight = dp2px(DEFAULT_DIVIDER_HEIGHT_DP);
-        this.mContext = context;
+    /**
+     * show a popup window in a bubble style.
+     *
+     * @param anchorView        the view on which to pin the popup window
+     * @param contextPosition   context position
+     * @param rawX              the original raw X coordinate
+     * @param rawY              the original raw Y coordinate
+     * @param popupItemList     the list of the popup menu
+     * @param popupListListener the Listener
+     */
+    public void showPopupListWindow(View anchorView, int contextPosition, float rawX, float rawY, List<String> popupItemList, PopupListListener popupListListener) {
         this.mAnchorView = anchorView;
         this.mPopupItemList = popupItemList;
         this.mPopupListListener = popupListListener;
         this.mPopupWindow = null;
         this.mRawX = rawX;
         this.mRawY = rawY;
-        if (mScreenWidth == 0) {
-            mScreenWidth = getScreenWidth();
-        }
-        if (mScreenHeight == 0) {
-            mScreenHeight = getScreenHeight();
-        }
-        refreshBackgroundOrRadiusStateList();
-        refreshTextColorStateList(mPressedTextColor, mNormalTextColor);
+        mContextView = anchorView;
+        mContextPosition = contextPosition;
         if (mPopupListListener != null
-                && !mPopupListListener.showPopupList(mAnchorView, mAnchorView, 0)) {
+                && !mPopupListListener.showPopupList(mContextView, mContextView, contextPosition)) {
             return;
         }
-        mContextView = mAnchorView;
-        mContextPosition = 0;
         showPopupListWindow();
     }
 
@@ -414,13 +402,13 @@ public class PopupList {
         return mIndicatorView;
     }
 
-    public View getDefaultIndicatorView() {
-        return getTriangleIndicatorView(dp2px(16), dp2px(8), DEFAULT_NORMAL_BACKGROUND_COLOR);
+    public View getDefaultIndicatorView(Context context) {
+        return getTriangleIndicatorView(context, dp2px(16), dp2px(8), DEFAULT_NORMAL_BACKGROUND_COLOR);
     }
 
-    public View getTriangleIndicatorView(final float widthPixel, final float heightPixel,
+    public View getTriangleIndicatorView(Context context, final float widthPixel, final float heightPixel,
                                          final int color) {
-        ImageView indicator = new ImageView(mContext);
+        ImageView indicator = new ImageView(context);
         Drawable drawable = new Drawable() {
             @Override
             public void draw(Canvas canvas) {
