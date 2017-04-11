@@ -1,5 +1,6 @@
 package com.frank.sample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -68,6 +69,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(MainActivity.this, "onItemClicked:" + position, Toast.LENGTH_SHORT).show();
+            }
+        });
+        btn_long_click.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, SecondaryActivity.class));
             }
         });
         getData();

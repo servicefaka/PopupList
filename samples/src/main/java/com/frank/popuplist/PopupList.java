@@ -88,6 +88,14 @@ public class PopupList {
     private int mDividerWidth;
     private int mDividerHeight;
 
+    public PopupList() {
+
+    }
+
+    public PopupList(Context context) {
+        this.mContext = context;
+    }
+
     /**
      * {@link PopupList#init(Context, View, List, PopupListListener)} method make PopList restored
      * to the default style and rebind event. so other set() method should be invoked after that method.
@@ -162,6 +170,44 @@ public class PopupList {
         }
         refreshBackgroundOrRadiusStateList();
         refreshTextColorStateList(mPressedTextColor, mNormalTextColor);
+    }
+
+    public void showPopupListWindow(Context context, View anchorView, float rawX, float rawY, List<String> popupItemList, PopupListListener popupListListener) {
+        this.mNormalTextColor = DEFAULT_NORMAL_TEXT_COLOR;
+        this.mPressedTextColor = DEFAULT_PRESSED_TEXT_COLOR;
+        this.mTextSize = dp2px(DEFAULT_TEXT_SIZE_DP);
+        this.mTextPaddingLeft = dp2px(DEFAULT_TEXT_PADDING_LEFT_DP);
+        this.mTextPaddingTop = dp2px(DEFAULT_TEXT_PADDING_TOP_DP);
+        this.mTextPaddingRight = dp2px(DEFAULT_TEXT_PADDING_RIGHT_DP);
+        this.mTextPaddingBottom = dp2px(DEFAULT_TEXT_PADDING_BOTTOM_DP);
+        this.mNormalBackgroundColor = DEFAULT_NORMAL_BACKGROUND_COLOR;
+        this.mPressedBackgroundColor = DEFAULT_PRESSED_BACKGROUND_COLOR;
+        this.mBackgroundCornerRadius = dp2px(DEFAULT_BACKGROUND_RADIUS_DP);
+        this.mDividerColor = DEFAULT_DIVIDER_COLOR;
+        this.mDividerWidth = dp2px(DEFAULT_DIVIDER_WIDTH_DP);
+        this.mDividerHeight = dp2px(DEFAULT_DIVIDER_HEIGHT_DP);
+        this.mContext = context;
+        this.mAnchorView = anchorView;
+        this.mPopupItemList = popupItemList;
+        this.mPopupListListener = popupListListener;
+        this.mPopupWindow = null;
+        this.mRawX = rawX;
+        this.mRawY = rawY;
+        if (mScreenWidth == 0) {
+            mScreenWidth = getScreenWidth();
+        }
+        if (mScreenHeight == 0) {
+            mScreenHeight = getScreenHeight();
+        }
+        refreshBackgroundOrRadiusStateList();
+        refreshTextColorStateList(mPressedTextColor, mNormalTextColor);
+        if (mPopupListListener != null
+                && !mPopupListListener.showPopupList(mAnchorView, mAnchorView, 0)) {
+            return;
+        }
+        mContextView = mAnchorView;
+        mContextPosition = 0;
+        showPopupListWindow();
     }
 
     private void showPopupListWindow() {
@@ -369,7 +415,7 @@ public class PopupList {
     }
 
     public View getDefaultIndicatorView() {
-        return getTriangleIndicatorView(dp2px(17), dp2px(9), DEFAULT_NORMAL_BACKGROUND_COLOR);
+        return getTriangleIndicatorView(dp2px(16), dp2px(8), DEFAULT_NORMAL_BACKGROUND_COLOR);
     }
 
     public View getTriangleIndicatorView(final float widthPixel, final float heightPixel,
@@ -622,17 +668,8 @@ public class PopupList {
     }
 
     public interface AdapterPopupListListener extends PopupListListener {
-        /**
-         * Format the PopupList's text
-         *
-         * @param adapterView     The AbsListView
-         * @param contextView     The context view
-         * @param contextPosition The position of the view in the list
-         * @param position        The position of the view in the PopupList
-         * @param text            The PopupList's text
-         * @return The formatted text
-         */
         String formatText(View adapterView, View contextView, int contextPosition, int position, String text);
     }
 
 }
+
