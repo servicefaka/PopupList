@@ -14,14 +14,12 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
-import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -61,8 +59,8 @@ public class PopupList {
     private List<String> mPopupItemList;
     private PopupListListener mPopupListListener;
     private int mContextPosition;
-    private float mRawX;
-    private float mRawY;
+    private float mOffsetX;
+    private float mOffsetY;
     private StateListDrawable mLeftItemBackground;
     private StateListDrawable mRightItemBackground;
     private StateListDrawable mCornerItemBackground;
@@ -72,8 +70,6 @@ public class PopupList {
     private int mIndicatorHeight;
     private int mPopupWindowWidth;
     private int mPopupWindowHeight;
-    private int mScreenWidth;
-    private int mScreenHeight;
     private int mNormalTextColor;
     private int mPressedTextColor;
     private float mTextSize;
@@ -104,12 +100,6 @@ public class PopupList {
         this.mDividerWidth = dp2px(DEFAULT_DIVIDER_WIDTH_DP);
         this.mDividerHeight = dp2px(DEFAULT_DIVIDER_HEIGHT_DP);
         this.mIndicatorView = getDefaultIndicatorView(mContext);
-        if (mScreenWidth == 0) {
-            mScreenWidth = getScreenWidth();
-        }
-        if (mScreenHeight == 0) {
-            mScreenHeight = getScreenHeight();
-        }
         refreshBackgroundOrRadiusStateList();
         refreshTextColorStateList(mPressedTextColor, mNormalTextColor);
     }
@@ -135,8 +125,8 @@ public class PopupList {
         mAnchorView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                mRawX = event.getRawX();
-                mRawY = event.getRawY();
+                mOffsetX = event.getX();
+                mOffsetY = event.getY();
                 return false;
             }
         });
@@ -151,7 +141,7 @@ public class PopupList {
                     mAdapterView = parent;
                     mContextView = view;
                     mContextPosition = position;
-                    showPopupListWindow();
+                    showPopupListWindow(mOffsetX, mOffsetY);
                     return true;
                 }
             });
@@ -165,7 +155,7 @@ public class PopupList {
                     }
                     mContextView = v;
                     mContextPosition = 0;
-                    showPopupListWindow();
+                    showPopupListWindow(mOffsetX, mOffsetY);
                     return true;
                 }
             });
@@ -182,23 +172,24 @@ public class PopupList {
      * @param popupItemList     the list of the popup menu
      * @param popupListListener the Listener
      */
-    public void showPopupListWindow(View anchorView, int contextPosition, float rawX, float rawY, List<String> popupItemList, PopupListListener popupListListener) {
-        this.mAnchorView = anchorView;
-        this.mPopupItemList = popupItemList;
-        this.mPopupListListener = popupListListener;
-        this.mPopupWindow = null;
-        this.mRawX = rawX;
-        this.mRawY = rawY;
-        mContextView = anchorView;
+    public void showPopupListWindow(View anchorView, int contextPosition, float rawX, float rawY,
+                                    List<String> popupItemList, PopupListListener popupListListener) {
+        mAnchorView = anchorView;
         mContextPosition = contextPosition;
+        mPopupItemList = popupItemList;
+        mPopupListListener = popupListListener;
+        mPopupWindow = null;
+        mContextView = anchorView;
         if (mPopupListListener != null
                 && !mPopupListListener.showPopupList(mContextView, mContextView, contextPosition)) {
             return;
         }
-        showPopupListWindow();
+        int[] location = new int[2];
+        mAnchorView.getLocationOnScreen(location);
+        showPopupListWindow(rawX - location[0], rawY - location[1]);
     }
 
-    private void showPopupListWindow() {
+    private void showPopupListWindow(float offsetX, float offsetY) {
         if (mContext instanceof Activity && ((Activity) mContext).isFinishing()) {
             return;
         }
@@ -291,30 +282,24 @@ public class PopupList {
             mPopupWindow.setTouchable(true);
             mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
         }
+        int[] location = new int[2];
+        mAnchorView.getLocationOnScreen(location);
         if (mIndicatorView != null) {
-            float marginLeftScreenEdge = mRawX;
-            float marginRightScreenEdge = mScreenWidth - mRawX;
-            if (marginLeftScreenEdge < mPopupWindowWidth / 2f) {
-                // in case of the draw of indicator out of corner's bounds
-                if (marginLeftScreenEdge < mIndicatorWidth / 2f + mBackgroundCornerRadius) {
-                    mIndicatorView.setTranslationX(mIndicatorWidth / 2f + mBackgroundCornerRadius - mPopupWindowWidth / 2f);
-                } else {
-                    mIndicatorView.setTranslationX(marginLeftScreenEdge - mPopupWindowWidth / 2f);
-                }
-            } else if (marginRightScreenEdge < mPopupWindowWidth / 2f) {
-                if (marginRightScreenEdge < mIndicatorWidth / 2f + mBackgroundCornerRadius) {
-                    mIndicatorView.setTranslationX(mPopupWindowWidth / 2f - mIndicatorWidth / 2f - mBackgroundCornerRadius);
-                } else {
-                    mIndicatorView.setTranslationX(mPopupWindowWidth / 2f - marginRightScreenEdge);
-                }
+            float leftTranslationLimit = mIndicatorWidth / 2f + mBackgroundCornerRadius - mPopupWindowWidth / 2f;
+            float rightTranslationLimit = mPopupWindowWidth / 2f - mIndicatorWidth / 2f - mBackgroundCornerRadius;
+            float maxWidth = mContext.getResources().getDisplayMetrics().widthPixels;
+            if (location[0] + offsetX < mPopupWindowWidth / 2f) {
+                mIndicatorView.setTranslationX(Math.max(location[0] + offsetX - mPopupWindowWidth / 2f, leftTranslationLimit));
+            } else if (location[0] + offsetX + mPopupWindowWidth / 2f > maxWidth) {
+                mIndicatorView.setTranslationX(Math.min(location[0] + offsetX + mPopupWindowWidth / 2f - maxWidth, rightTranslationLimit));
             } else {
                 mIndicatorView.setTranslationX(0);
             }
         }
         if (!mPopupWindow.isShowing()) {
-            mPopupWindow.showAtLocation(mAnchorView, Gravity.CENTER,
-                    (int) mRawX - mScreenWidth / 2,
-                    (int) mRawY - mScreenHeight / 2 - mPopupWindowHeight + mIndicatorHeight);
+            int x = (int) (location[0] + offsetX - mPopupWindowWidth / 2f + 0.5f);
+            int y = (int) (location[1] + offsetY - mPopupWindowHeight + 0.5f);
+            mPopupWindow.showAtLocation(mAnchorView, Gravity.NO_GRAVITY, x, y);
         }
     }
 
@@ -594,22 +579,6 @@ public class PopupList {
         } else {
             return mContext.getResources();
         }
-    }
-
-    private int getScreenWidth() {
-        WindowManager wm = (WindowManager) mContext
-                .getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(outMetrics);
-        return outMetrics.widthPixels;
-    }
-
-    private int getScreenHeight() {
-        WindowManager wm = (WindowManager) mContext
-                .getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(outMetrics);
-        return outMetrics.heightPixels;
     }
 
     private int getViewWidth(View view) {

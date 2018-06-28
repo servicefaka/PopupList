@@ -54,18 +54,21 @@ public class SecondaryActivity extends AppCompatActivity {
         lv_main.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                int[] location = new int[2];
+                view.getLocationOnScreen(location);
                 PopupList popupList = new PopupList(view.getContext());
-                popupList.showPopupListWindow(view, position, mRawX, mRawY, popupMenuItemList, new PopupList.PopupListListener() {
-                    @Override
-                    public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
-                        return true;
-                    }
+                popupList.showPopupListWindow(view, position, location[0] + view.getWidth() / 2,
+                        location[1], popupMenuItemList, new PopupList.PopupListListener() {
+                            @Override
+                            public boolean showPopupList(View adapterView, View contextView, int contextPosition) {
+                                return true;
+                            }
 
-                    @Override
-                    public void onPopupListClick(View contextView, int contextPosition, int position) {
-                        Toast.makeText(contextView.getContext(), contextPosition + "," + position, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                            @Override
+                            public void onPopupListClick(View contextView, int contextPosition, int position) {
+                                Toast.makeText(contextView.getContext(), contextPosition + "," + position, Toast.LENGTH_SHORT).show();
+                            }
+                        });
                 return true;
             }
         });
