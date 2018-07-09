@@ -1,7 +1,7 @@
 # PopupList
-It can show a edit menu when you press a View by a long-press gesture.
+It can show a edit menu when you press a View by a long-press gesture.  
 This utility class can bind a edit menu for ListView, GridView, or other View easily.  
-**Welcome star, fork**
+**Welcome star, fork**  
 ## Screenshots
 ![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_1.png)![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_2.png)<br />
 ![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_3.png)![ScreenShot](https://github.com/shangmingchao/PopupList/blob/master/screenshots/screenshot_4.png)
@@ -11,7 +11,7 @@ Just need a `.java` file and a little code.
     PopupList popupList = new PopupList(context);
     popupList.bind(anchorView, popupMenuItemList, PopupListListener);
 ```
-## Sample：
+## Sample
 ```java
     PopupList popupList = new PopupList(this);
     popupList.bind(lv_main, popupMenuItemList, new PopupList.PopupListListener() {
@@ -25,5 +25,5 @@ Just need a `.java` file and a little code.
         }
     });
 ```
-## Customization：
+## Customization
 You can get more information from the [Wiki](https://github.com/shangmingchao/PopupList/wiki/Configuration) page.  
