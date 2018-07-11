@@ -30,9 +30,7 @@ import android.widget.TextView;
 import java.util.List;
 
 /**
- * This utility class can add a horizontal popup-menu easily
- * <p>
- * 该工具类可以很方便的为View、ListView/GridView绑定长按弹出横向气泡菜单
+ * This utility class can show a edit menu easily
  */
 public class PopupList {
 
